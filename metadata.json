@@ -1,0 +1,6 @@
+{
+  "name": "Kuentas: Tax & Books of Accounts Helper",
+  "description": "Standalone BIR 8% Gross Income Tax calculator and Cash Receipts columnar journal helper for Philippine freelancers and self-employed professionals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
