@@ -47,7 +47,7 @@ export const DonateModal: React.FC<DonateModalProps> = ({ isOpen, onClose }) => 
           {/* GCash QR Code Image */}
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 shadow-inner flex flex-col items-center justify-center">
             <img
-              src="/gcash.jpeg"
+              src="./gcash.jpeg"
               alt="GCash QR Code"
               className="w-48 h-48 object-contain rounded-lg mx-auto"
               onError={(e) => {
