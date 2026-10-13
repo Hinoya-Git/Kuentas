@@ -236,7 +236,7 @@ const DEFAULT_FILER_SETTINGS: SawtFilerSettings = {
 export function SawtBuilder() {
   const [certificates, setCertificates] = useState<SawtEntry[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_SAWT);
+      const saved = localStorage.getItem('kuentas_sawt') || localStorage.getItem(STORAGE_KEY_SAWT);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -260,6 +260,7 @@ export function SawtBuilder() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_SAWT, JSON.stringify(certificates));
+      localStorage.setItem('kuentas_sawt', JSON.stringify(certificates));
     } catch {
       // ignore
     }
@@ -268,7 +269,7 @@ export function SawtBuilder() {
   // Filer Settings State (BIR RMC No. 61-2024 specifications)
   const [filerSettings, setFilerSettings] = useState<SawtFilerSettings>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_FILER);
+      const saved = localStorage.getItem('kuentas_filer') || localStorage.getItem(STORAGE_KEY_FILER);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
@@ -279,7 +280,7 @@ export function SawtBuilder() {
         }
       }
       // Check if 1701Q taxpayer profile is available
-      const savedTaxpayer = localStorage.getItem('kuentas_taxpayer_profile_v1');
+      const savedTaxpayer = localStorage.getItem('kuentas_filer') || localStorage.getItem('kuentas_taxpayer_profile_v1');
       if (savedTaxpayer) {
         const tp = JSON.parse(savedTaxpayer);
         if (tp && tp.tin) {
@@ -310,6 +311,7 @@ export function SawtBuilder() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_FILER, JSON.stringify(filerSettings));
+      localStorage.setItem('kuentas_filer', JSON.stringify(filerSettings));
     } catch {
       // ignore
     }

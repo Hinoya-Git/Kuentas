@@ -1,5 +1,5 @@
-import React from 'react';
-import { AlertCircle, BookOpen, Coffee, FileSpreadsheet, FolderUp, RotateCcw, Trash2, UserCheck } from 'lucide-react';
+import React, { useRef } from 'react';
+import { AlertCircle, BookOpen, Coffee, RotateCcw, Trash2, UserCheck } from 'lucide-react';
 import { TaxpayerProfile } from '../types/index.ts';
 
 interface HeaderProps {
@@ -8,7 +8,7 @@ interface HeaderProps {
   onPromptResetSample: () => void;
   onPromptClearAll: () => void;
   onExportBackup: () => void;
-  onRestoreBackup: () => void;
+  onRestoreBackup?: () => void;
   onOpenDonateModal: () => void;
 }
 
@@ -21,6 +21,84 @@ export const Header: React.FC<HeaderProps> = ({
   onRestoreBackup,
   onOpenDonateModal,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      const data = JSON.parse(content);
+
+      // Verify the parsed payload contains at least one recognized Kuentas key
+      // (e.g., transactions, filerSettings, sawtList, or activeQuarter)
+      const recognizedKeys = [
+        'transactions',
+        'filerSettings',
+        'sawtList',
+        'activeQuarter',
+        'savedTransactions',
+        'filerMetadata',
+        'taxpayer',
+        'sawtCertificates',
+        'certificates',
+        'sawt',
+        'quarterSettingsMap',
+        'version',
+      ];
+
+      const hasRecognizedKey =
+        Boolean(data) &&
+        typeof data === 'object' &&
+        recognizedKeys.some((k) => k in data);
+
+      if (!hasRecognizedKey) {
+        alert('Invalid Kuentas backup file format.');
+        if (e.target) e.target.value = '';
+        return;
+      }
+
+      // Update all corresponding localStorage items:
+      const transactions = data.transactions || data.savedTransactions || [];
+      const filerSettings = data.filerSettings || data.filerMetadata || data.taxpayer || {};
+      const sawtList = data.sawtList || data.sawtCertificates || data.certificates || data.sawt || [];
+
+      // Required keys from prompt:
+      localStorage.setItem('kuentas_transactions', JSON.stringify(transactions));
+      localStorage.setItem('kuentas_filer', JSON.stringify(filerSettings));
+      localStorage.setItem('kuentas_sawt', JSON.stringify(sawtList));
+
+      // Also persist to internal storage keys so existing components hydrate perfectly:
+      localStorage.setItem('kuentas_txns_v3', JSON.stringify(transactions));
+      localStorage.setItem('kuentas_taxpayer_v3', JSON.stringify(data.taxpayer || filerSettings));
+      localStorage.setItem('kuentas_taxpayer_profile_v1', JSON.stringify(data.taxpayer || filerSettings));
+      localStorage.setItem('kuentas_sawt_certificates_v1', JSON.stringify(sawtList));
+      localStorage.setItem('kuentas_sawt_filer_v2', JSON.stringify(filerSettings));
+
+      if (data.quarterSettingsMap) {
+        localStorage.setItem('kuentas_settings_v3', JSON.stringify(data.quarterSettingsMap));
+      }
+      if (data.activeQuarter || data.quarter) {
+        localStorage.setItem('kuentas_quarter_v3', data.activeQuarter || data.quarter);
+      }
+      if (data.activeYear || data.year) {
+        localStorage.setItem('kuentas_year_v3', String(data.activeYear || data.year));
+      }
+      if (data.quarterData2551Q) {
+        localStorage.setItem('kuentas_2551q_inputs_v1', JSON.stringify(data.quarterData2551Q));
+      }
+
+      // Reset the input value so the user can re-upload if needed:
+      e.target.value = '';
+
+      // Trigger a hard state reload or call window.location.reload() immediately
+      window.location.reload();
+    } catch {
+      alert('Invalid Kuentas backup file format.');
+      if (e.target) e.target.value = '';
+    }
+  };
   return (
     <header className="border-b border-slate-200 bg-white print:hidden">
       {/* Top Compliance & Legal Disclaimer Banner */}
@@ -105,20 +183,27 @@ export const Header: React.FC<HeaderProps> = ({
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 rounded-lg border border-slate-300 transition-colors shadow-2xs cursor-pointer"
               title="Backup your data as JSON file"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-slate-500" />
-              <span>Backup</span>
+              <span>💾 Backup</span>
             </button>
 
             {/* Restore Backup */}
             <button
               type="button"
-              onClick={onRestoreBackup}
+              onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 rounded-lg border border-slate-300 transition-colors shadow-2xs cursor-pointer"
               title="Restore data from Kuentas JSON backup file"
             >
-              <FolderUp className="w-3.5 h-3.5 text-slate-500" />
-              <span>Restore Backup</span>
+              <span>📂 Restore Backup</span>
             </button>
+
+            {/* Hidden File Input for Restore Backup */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept=".json,application/json" 
+              className="hidden" 
+              onChange={handleFileRestore} 
+            />
 
             {/* Subtle Reset to Default Sample Data */}
             <button

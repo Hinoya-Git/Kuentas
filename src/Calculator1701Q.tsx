@@ -56,7 +56,7 @@ export function Calculator1701Q() {
   // 1. Taxpayer Profile State (persisted in localStorage)
   const [taxpayer, setTaxpayer] = useState<TaxpayerProfile>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.TAXPAYER);
+      const saved = localStorage.getItem('kuentas_filer') || localStorage.getItem(STORAGE_KEYS.TAXPAYER);
       return saved ? JSON.parse(saved) : EMPTY_TAXPAYER;
     } catch {
       return EMPTY_TAXPAYER;
@@ -85,7 +85,7 @@ export function Calculator1701Q() {
   // 3. Transactions State (persisted in localStorage)
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+      const saved = localStorage.getItem('kuentas_transactions') || localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -137,6 +137,7 @@ export function Calculator1701Q() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+      localStorage.setItem('kuentas_transactions', JSON.stringify(transactions));
     } catch (e) {
       console.error('Failed to persist transactions', e);
     }
@@ -153,6 +154,7 @@ export function Calculator1701Q() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.TAXPAYER, JSON.stringify(taxpayer));
+      localStorage.setItem('kuentas_filer', JSON.stringify(taxpayer));
     } catch (e) {
       console.error('Failed to persist taxpayer', e);
     }
@@ -348,13 +350,11 @@ export function Calculator1701Q() {
     }
   };
 
-  // Backup & Restore
-  const restoreFileInputRef = useRef<HTMLInputElement>(null);
-
+  // Backup Export
   const handleExportBackup = () => {
     let sawtCertificates = [];
     try {
-      const savedSawt = localStorage.getItem('kuentas_sawt_certificates_v1');
+      const savedSawt = localStorage.getItem('kuentas_sawt') || localStorage.getItem('kuentas_sawt_certificates_v1');
       if (savedSawt) sawtCertificates = JSON.parse(savedSawt);
     } catch {
       // ignore
@@ -362,7 +362,7 @@ export function Calculator1701Q() {
 
     let filerSettings = null;
     try {
-      const savedFiler = localStorage.getItem('kuentas_sawt_filer_v2');
+      const savedFiler = localStorage.getItem('kuentas_filer') || localStorage.getItem('kuentas_sawt_filer_v2');
       if (savedFiler) filerSettings = JSON.parse(savedFiler);
     } catch {
       // ignore
@@ -377,16 +377,19 @@ export function Calculator1701Q() {
     }
 
     const backupData = {
-      version: '3.1',
+      version: '3.2',
       exportedAt: new Date().toISOString(),
+      transactions,
+      filerSettings: filerSettings || taxpayer,
+      sawtList: sawtCertificates,
+      activeQuarter: quarter,
+      // Compatibility aliases:
+      savedTransactions: transactions,
       taxpayer,
       filerMetadata: filerSettings || taxpayer,
-      filerSettings: filerSettings || taxpayer,
-      quarterSettingsMap,
-      transactions,
-      savedTransactions: transactions,
       sawtCertificates,
       certificates: sawtCertificates,
+      quarterSettingsMap,
       quarterData2551Q: data2551Q,
     };
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
@@ -404,118 +407,10 @@ export function Calculator1701Q() {
     showToast('Backup JSON exported successfully.');
   };
 
-  const handleRestoreBackupFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const data = JSON.parse(text);
-
-        // Validation: matches Kuentas backup structure
-        // (contains saved transactions, filer metadata, and SAWT certificates)
-        const hasTransactions =
-          Boolean(data) &&
-          (Array.isArray(data.transactions) || Array.isArray(data.savedTransactions));
-
-        const hasFilerMetadata =
-          Boolean(data) &&
-          Boolean(
-            (data.taxpayer && typeof data.taxpayer === 'object') ||
-            (data.filerMetadata && typeof data.filerMetadata === 'object') ||
-            (data.filerSettings && typeof data.filerSettings === 'object')
-          );
-
-        const hasSawtCertificates =
-          Boolean(data) &&
-          (Array.isArray(data.sawtCertificates) ||
-            Array.isArray(data.certificates) ||
-            Array.isArray(data.sawt));
-
-        if (!hasTransactions || !hasFilerMetadata || !hasSawtCertificates) {
-          alert('Invalid Kuentas backup file format.');
-          return;
-        }
-
-        // Confirmation dialog
-        const confirmed = window.confirm(
-          'Restoring this backup will overwrite existing local data. Do you want to proceed?'
-        );
-        if (!confirmed) {
-          return;
-        }
-
-        // Extract restored data
-        const restoredTransactions = data.transactions || data.savedTransactions || [];
-        const restoredTaxpayer = data.taxpayer || data.filerMetadata || data.filerSettings;
-        const restoredSettings = data.quarterSettingsMap || INITIAL_QUARTER_SETTINGS;
-        const restoredSawt = data.sawtCertificates || data.certificates || data.sawt || [];
-        const restoredFiler = data.filerSettings || data.filerMetadata || data.taxpayer;
-
-        // Write to state
-        setTransactions(restoredTransactions);
-        if (restoredTaxpayer) setTaxpayer(restoredTaxpayer);
-        if (data.quarterSettingsMap) setQuarterSettingsMap(restoredSettings);
-
-        // Write to localStorage
-        try {
-          localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(restoredTransactions));
-          if (restoredTaxpayer) {
-            localStorage.setItem(STORAGE_KEYS.TAXPAYER, JSON.stringify(restoredTaxpayer));
-            localStorage.setItem('kuentas_taxpayer_profile_v1', JSON.stringify(restoredTaxpayer));
-          }
-          if (data.quarterSettingsMap) {
-            localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(restoredSettings));
-          }
-          if (Array.isArray(restoredSawt)) {
-            localStorage.setItem('kuentas_sawt_certificates_v1', JSON.stringify(restoredSawt));
-          }
-          if (restoredFiler) {
-            localStorage.setItem('kuentas_sawt_filer_v2', JSON.stringify(restoredFiler));
-          }
-          if (data.quarterData2551Q) {
-            localStorage.setItem('kuentas_2551q_inputs_v1', JSON.stringify(data.quarterData2551Q));
-          }
-        } catch (storageErr) {
-          console.error('Failed to write backup data to localStorage:', storageErr);
-        }
-
-        // Reload/refresh the active view
-        window.location.reload();
-      } catch (err) {
-        alert('Invalid Kuentas backup file format.');
-      } finally {
-        if (e.target) {
-          e.target.value = '';
-        }
-      }
-    };
-
-    reader.onerror = () => {
-      alert('Invalid Kuentas backup file format.');
-      if (e.target) {
-        e.target.value = '';
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
   const isQ4 = quarter === 'Q4';
 
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 font-sans flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900">
-      {/* Hidden File Input for Restore Backup (.json files only) */}
-      <input
-        type="file"
-        ref={restoreFileInputRef}
-        onChange={handleRestoreBackupFile}
-        accept=".json"
-        className="hidden"
-      />
-
       {/* App Header & Legal Notice */}
       <Header
         taxpayer={taxpayer}
@@ -523,7 +418,6 @@ export function Calculator1701Q() {
         onPromptResetSample={() => setIsResetSampleModalOpen(true)}
         onPromptClearAll={() => setIsClearAllModalOpen(true)}
         onExportBackup={handleExportBackup}
-        onRestoreBackup={() => restoreFileInputRef.current?.click()}
         onOpenDonateModal={() => setShowDonateModal(true)}
       />
 
