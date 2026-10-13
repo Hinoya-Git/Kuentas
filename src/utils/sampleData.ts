@@ -41,9 +41,9 @@ export const EMPTY_QUARTER_SETTINGS: Record<string, QuarterSettings> = {
 
 export const DEFAULT_TAXPAYER: TaxpayerProfile = {
   taxpayerName: 'JUAN DELA CRUZ',
-  tin: '123-456-789-000',
+  tin: '123-456-788-0000',
   registeredAddress: 'Unit 402, High Street South, Bonifacio Global City, Taguig City, Metro Manila',
-  rdo: 'RDO 044 - Taguig City / Pateros',
+  rdo: '008',
   lineOfBusiness: 'Professional / IT & Software Development Consultancy (PSIC 6201)',
 };
 
@@ -79,40 +79,66 @@ export const INITIAL_QUARTER_SETTINGS: Record<string, QuarterSettings> = {
 };
 
 export const SAMPLE_TRANSACTIONS: Transaction[] = [
-  // Q1 2026
+  // Q1 2026 (5 freelance inflow entries totaling ₱800,000)
   {
     id: 'txn_sample_01',
-    date: '2026-01-14',
+    date: '2026-01-15',
     payor: 'Apex Horizon Technologies Inc. (PH Client)',
     reference: 'INV-2026-001',
-    amount: 150000,
+    amount: 180000,
     quarter: 'Q1',
     category: 'Full-Stack Web Development',
-    notes: 'Payment for Phase 1 MVP Milestone. Net of 5% CWT 2307 (₱7,500).',
-    withholding2307Amount: 7500,
-    createdAt: 1736841600000,
+    notes: 'Payment for Phase 1 MVP Milestone. Net of 5% CWT 2307 (₱9,000).',
+    withholding2307Amount: 9000,
+    createdAt: 1736928000000,
   },
   {
     id: 'txn_sample_02',
-    date: '2026-02-03',
+    date: '2026-01-29',
     payor: 'CloudScale Solutions LLC (San Francisco, CA)',
-    reference: 'WIRE-US-9941',
-    amount: 125000,
+    reference: 'WIRE-US-2026-01',
+    amount: 175000,
     quarter: 'Q1',
     category: 'Cloud Architecture & DevOps',
-    notes: 'Wise direct bank deposit for January retainer.',
-    createdAt: 1738569600000,
+    notes: 'Overseas client monthly retainer. Wire transfer via Wise / direct bank credit.',
+    withholding2307Amount: 0,
+    createdAt: 1738137600000,
   },
   {
     id: 'txn_sample_03',
-    date: '2026-03-20',
-    payor: 'DesignSprint Studio (Sydney, AU)',
+    date: '2026-02-14',
+    payor: 'Metro Manila Digital Ventures Corp. (PH Client)',
     reference: 'INV-2026-002',
-    amount: 110000,
+    amount: 160000,
+    quarter: 'Q1',
+    category: 'Full-Stack Web Development',
+    notes: 'Mobile app API integration milestone. Form 2307 received (₱8,000).',
+    withholding2307Amount: 8000,
+    createdAt: 1739520000000,
+  },
+  {
+    id: 'txn_sample_04',
+    date: '2026-03-05',
+    payor: 'DesignSprint Studio (Sydney, AU)',
+    reference: 'INV-2026-003',
+    amount: 135000,
     quarter: 'Q1',
     category: 'UI/UX Design Systems',
     notes: 'Design review and Figma component library delivery.',
-    createdAt: 1742457600000,
+    withholding2307Amount: 0,
+    createdAt: 1741161600000,
+  },
+  {
+    id: 'txn_sample_05',
+    date: '2026-03-24',
+    payor: 'Bayanihan Tech Solutions Inc. (PH Client)',
+    reference: 'INV-2026-004',
+    amount: 150000,
+    quarter: 'Q1',
+    category: 'IT Security & Systems Audit',
+    notes: 'Cloud infrastructure hardening & penetration test report. Form 2307 received (₱7,500).',
+    withholding2307Amount: 7500,
+    createdAt: 1742803200000,
   },
 
   // Q2 2026

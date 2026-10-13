@@ -47,6 +47,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({
   const [inlineDate, setInlineDate] = useState<string>(today);
   const [inlinePayor, setInlinePayor] = useState<string>('');
   const [inlineRef, setInlineRef] = useState<string>('');
+  const [inlineParticulars, setInlineParticulars] = useState<string>('');
   const [inlineAmount, setInlineAmount] = useState<string>('');
   const [inlineError, setInlineError] = useState<string>('');
 
@@ -92,18 +93,22 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({
       return;
     }
 
+    const particulars = inlineParticulars.trim() || 'Professional Fees';
+
     onAddTransaction({
       date: inlineDate,
       payor: inlinePayor.trim(),
       reference: inlineRef.trim(),
       amount: cleanAmount,
       quarter,
-      category: 'Professional Fees',
+      category: particulars,
+      notes: particulars,
     });
 
     // Reset fields except date for fast batch entry
     setInlinePayor('');
     setInlineRef('');
+    setInlineParticulars('');
     setInlineAmount('');
     setInlineError('');
   };
@@ -165,7 +170,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({
         )}
 
         <form onSubmit={handleInlineSubmit}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Date */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 mb-1">
@@ -181,7 +186,7 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({
             </div>
 
             {/* Payor / Client Name */}
-            <div className="lg:col-span-1">
+            <div>
               <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                 Payor / Client Name <span className="text-red-500">*</span>
               </label>
@@ -207,6 +212,20 @@ export const TransactionsTab: React.FC<TransactionsTabProps> = ({
                 value={inlineRef}
                 onChange={(e) => setInlineRef(e.target.value)}
                 className="w-full px-2.5 py-1.5 text-xs font-mono rounded border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600 text-slate-900"
+              />
+            </div>
+
+            {/* Particulars / Description */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                Particulars / Description
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. IT Audit / Consulting"
+                value={inlineParticulars}
+                onChange={(e) => setInlineParticulars(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600 text-slate-900"
               />
             </div>
 

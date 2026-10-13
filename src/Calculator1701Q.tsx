@@ -306,17 +306,41 @@ export function Calculator1701Q() {
 
   // RESET TO DEFAULT SAMPLE DATA: Confirmed handler
   const handleResetToSampleData = () => {
+    // 1. Crucially: update active React states directly so UI updates immediately
     setTransactions(SAMPLE_TRANSACTIONS);
     setTaxpayer(DEFAULT_TAXPAYER);
+    setQuarter('Q1');
+    setYear(2026);
     setQuarterSettingsMap(INITIAL_QUARTER_SETTINGS);
+
+    // 2. Saves these entries directly into localStorage under their respective keys
     try {
+      localStorage.setItem('kuentas_transactions', JSON.stringify(SAMPLE_TRANSACTIONS));
+      localStorage.setItem('kuentas_filer', JSON.stringify(DEFAULT_TAXPAYER));
+
+      // Also persist to internal storage keys so all views and modules stay in sync
       localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(SAMPLE_TRANSACTIONS));
       localStorage.setItem(STORAGE_KEYS.TAXPAYER, JSON.stringify(DEFAULT_TAXPAYER));
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(INITIAL_QUARTER_SETTINGS));
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_QUARTER, 'Q1');
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_YEAR, '2026');
+      localStorage.setItem('kuentas_taxpayer_profile_v1', JSON.stringify(DEFAULT_TAXPAYER));
+      localStorage.setItem('kuentas_sawt_filer_v2', JSON.stringify(DEFAULT_TAXPAYER));
     } catch (e) {
       console.error('Failed to persist sample data reset', e);
     }
-    showToast('Reset to default sample data successfully.');
+    showToast('Loaded sample data for Q1 2026.');
+  };
+
+  const handlePromptResetSample = () => {
+    if (transactions && transactions.length > 0) {
+      const confirmed = window.confirm(
+        'Load sample data? This will overwrite your current entries.'
+      );
+      if (!confirmed) return;
+    }
+    handleResetToSampleData();
+    setIsResetSampleModalOpen(false);
   };
 
   // CLEAR ALL FEATURE: Confirmed handler
@@ -415,7 +439,7 @@ export function Calculator1701Q() {
       <Header
         taxpayer={taxpayer}
         onOpenTaxpayerModal={() => setIsTaxpayerModalOpen(true)}
-        onPromptResetSample={() => setIsResetSampleModalOpen(true)}
+        onPromptResetSample={handlePromptResetSample}
         onPromptClearAll={() => setIsClearAllModalOpen(true)}
         onExportBackup={handleExportBackup}
         onOpenDonateModal={() => setShowDonateModal(true)}
@@ -542,7 +566,7 @@ export function Calculator1701Q() {
               }}
               onDeleteClick={handleDeleteTransaction}
               onPromptClearAll={() => setIsClearAllModalOpen(true)}
-              onPromptResetSample={() => setIsResetSampleModalOpen(true)}
+              onPromptResetSample={handlePromptResetSample}
               onOpenCSVImport={() => setIsCSVModalOpen(true)}
             />
           )}
